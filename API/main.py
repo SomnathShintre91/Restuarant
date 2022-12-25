@@ -7,6 +7,7 @@ app = FastAPI()
 
 origins = [
     "http://127.0.0.1:5500",
+    "*"
 ]
 
 app.add_middleware(
@@ -34,8 +35,30 @@ def get_search_(search, searchText: str = ""):
     cursor.close()
     return record
   else:
-    query = "SELECT * FROM 'AllInfo' where " + search + "='" + searchText+"'"
+    query = "SELECT * FROM 'AllInfo' WHERE " + search + "='" + searchText+"'"
     cursor.execute(query)
     record = cursor.fetchall()
     cursor.close()
     return record
+
+@app.get("/get-filter")
+def get_filter_(search, searchText):
+  conn = sqlite3.connect(db_path)
+  cursor = conn.cursor()
+  searchColumn = "Cuisine" if search == "Region" else "Region"
+  cursor.execute("SELECT DISTINCT "+ searchColumn +" FROM 'AllInfo' WHERE " + search +" = '" + searchText + "'")
+  record = cursor.fetchall()
+  cursor.close()
+  return record
+
+@app.get("/get-filter-result")
+def get_filter_result_(search, searchText, filterList):
+  conn = sqlite3.connect(db_path)
+  cursor = conn.cursor()
+  searchColumn = "Cuisine" if search == "Region" else "Region"
+  query = "SELECT * FROM 'AllInfo' WHERE " + search + "='" + searchText+"'"
+  query += " And " +searchColumn+ " = '" + filterList + "'"
+  cursor.execute(query)
+  record = cursor.fetchall()
+  cursor.close()
+  return record
